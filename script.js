@@ -2,7 +2,7 @@
 /* CONFIG */
 const page = document.body.dataset.page;
 
-gsap.registerPlugin(ScrollTrigger);
+gsap.registerPlugin(ScrollTrigger, Draggable);
 
 /* GENERAL CODE */
 
@@ -126,6 +126,85 @@ if (page === "manufacturing") {
 }
 
   initAccordionCSS();
+
+
+
+
+/* Polaroid Scatter */
+  const section = document.querySelector(".section_polaroid");
+  const items = document.querySelectorAll(".polaroid-item");
+
+  const sectionBounds = section.getBoundingClientRect();
+
+  // Initial scattered state
+  items.forEach((item, i) => {
+    gsap.set(item, {
+      x: gsap.utils.random(-40, 40),  // small initial scatter
+      y: gsap.utils.random(-40, 40),
+      rotation: gsap.utils.random(-15, 15),
+      scale: 1,
+      zIndex: i
+    });
+  });
+
+  // Animate to full scatter on scroll
+const padding = 50;
+
+gsap.to(items, {
+  x: () => gsap.utils.random(
+    -(sectionBounds.width / 2.3) + padding,
+     (sectionBounds.width / 2.3) - padding
+  ),
+  y: () => gsap.utils.random(-sectionBounds.height / 2.6, sectionBounds.height / 2.6),
+  rotation: () => gsap.utils.random(-30, 30),
+  duration: 1.2,
+  ease: "expo.out",
+  stagger: 0.04,
+  scrollTrigger: {
+    trigger: section,
+    start: "25% center",
+    end: "bottom center",
+    scrub: false
+  }
+});
+
+
+
+
+function initDraggableStickers() {
+  const wrapper = document.querySelector('[data-sticker="wrap"]');
+  const stickers = document.querySelectorAll('[data-sticker="item"]');
+  if (!wrapper || !stickers.length) return;
+  
+  stickers.forEach(sticker => {
+    Draggable.create(sticker, {
+      bounds: wrapper, // you could change this to the full window for example
+      dragResistance: 0.1, // number between 0-1, the higher this is, the harder the sticker resists
+      onPress() {
+        // Scale and rotate the sticker slightly as soon as user 'grabs' it
+        gsap.to(this.target, {
+          scale: 1.2,
+          rotation: gsap.utils.random(-30, 30),
+          filter: "drop-shadow(0px 10px 8px rgba(0,0,0,0.3))",
+          duration: 0.1
+        });
+      },
+      onRelease() {
+        // Once user lets go, remove styling changes
+        gsap.to(this.target, {
+          scale: 1,
+          rotation: 0,
+          ease: "back.out(3)",
+          filter: "drop-shadow(0px 0px 0px rgba(0,0,0,0))",
+          duration: 0.2
+        });
+      }
+    });
+  });
+  
+}
+
+  initDraggableStickers();
 
 }
 
