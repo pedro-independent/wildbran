@@ -2,7 +2,7 @@
 /* CONFIG */
 const page = document.body.dataset.page;
 
-gsap.registerPlugin(ScrollTrigger, Draggable, DrawSVGPlugin);
+gsap.registerPlugin(ScrollTrigger, Draggable, DrawSVGPlugin, InertiaPlugin);
 
 /* GLOBAL CODE */
 
@@ -365,9 +365,7 @@ gsap.to(items, {
   }
 });
 
-
-
-
+/* Draggable Polaroid */
 function initDraggableStickers() {
   const wrapper = document.querySelector('[data-sticker="wrap"]');
   const stickers = document.querySelectorAll('[data-sticker="item"]');
@@ -401,11 +399,140 @@ function initDraggableStickers() {
   
 }
 
-  initDraggableStickers();
+initDraggableStickers();
+
+/* Horizontal Scroll Section */
+const initHorizontal = () => {
+  const mm = gsap.matchMedia();
+
+  mm.add("(min-width: 992px)", () => {
+    const horizontal = document.querySelector('.section_hsteps');
+    const horizontalContent = horizontal.querySelector('.hsteps-container');
+
+    if (horizontal && horizontalContent) {
+      // main horizontal scroll timeline
+      const tl = gsap.timeline({
+        defaults: { ease: 'none' },
+        scrollTrigger: {
+          trigger: horizontal,
+          start: 'top top',
+          end: () => '+=' + (horizontalContent.scrollWidth - window.innerWidth),
+          pin: true,
+          scrub: 1,
+          invalidateOnRefresh: true,
+        }
+      })
+      .to(horizontalContent, {
+        x: () => -(horizontalContent.scrollWidth - window.innerWidth),
+        ease: 'none',
+      });
+
+      // --- PARALLAX ITEMS ---
+      document.querySelectorAll('[data-parallax-step]').forEach((el) => {
+          const distance = el.dataset.distance || -50; // move in % (positive or negative)
+          const startPercent = el.dataset.start || 25; // optional: where it begins
+          const endPercent = el.dataset.end || distance; // optional: custom end
+  gsap.fromTo(el,
+    { xPercent: startPercent },
+    {
+      xPercent: endPercent,
+      ease: 'none',
+      scrollTrigger: {
+        containerAnimation: tl, // ties to horizontal scroll
+        trigger: el,
+        start: 'left 99%', // adjust as needed
+        end: 'left left',
+        scrub: true,
+      }
+    }
+  );
+});
+    }
+  });
+
+  mm.add("(max-width: 991px)", () => {
+    ScrollTrigger.getAll().forEach(st => st.kill());
+  });
+};
+
+initHorizontal();
 
 }
 
 /* CONTACTS */
 if (page === "contacts") {
+
+function initMomentumBasedHover() {
+
+  // If this device can’t hover with a fine pointer, stop here
+  if (!window.matchMedia("(hover: hover) and (pointer: fine)").matches) {return;}
+  
+  // Configuration (tweak these for feel)
+  const xyMultiplier       = 15;  // multiplies pointer velocity for x/y movement
+  const rotationMultiplier = 20;  // multiplies normalized torque for rotation speed
+  const inertiaResistance  = 90; // higher = stops sooner
+
+  // Pre-build clamp functions for performance
+  const clampXY  = gsap.utils.clamp(-1080, 1080);
+  const clampRot = gsap.utils.clamp(-60, 60);
+
+  // Initialize each root container
+  document.querySelectorAll('[data-momentum-hover-init]').forEach(root => {
+    let prevX = 0, prevY = 0;
+    let velX  = 0, velY  = 0;
+    let rafId = null;
+
+    // Track pointer velocity (throttled to RAF)
+    root.addEventListener('mousemove', e => {
+      if (rafId) return;
+      rafId = requestAnimationFrame(() => {
+        velX = e.clientX - prevX;
+        velY = e.clientY - prevY;
+        prevX = e.clientX;
+        prevY = e.clientY;
+        rafId = null;
+      });
+    });
+
+    // Attach hover inertia to each child element
+    root.querySelectorAll('[data-momentum-hover-element]').forEach(el => {
+      el.addEventListener('mouseenter', e => {
+        const target = el.querySelector('[data-momentum-hover-target]');
+        if (!target) return;
+
+        // Compute offset from center to pointer
+        const { left, top, width, height } = target.getBoundingClientRect();
+        const centerX = left + width / 2;
+        const centerY = top + height / 2;
+        const offsetX = e.clientX - centerX;
+        const offsetY = e.clientY - centerY;
+
+        // Compute raw torque (px²/frame)
+        const rawTorque = offsetX * velY - offsetY * velX;
+
+        // Normalize torque so rotation ∝ pointer speed (deg/sec)
+        const leverDist    = Math.hypot(offsetX, offsetY) || 1;
+        const angularForce = rawTorque / leverDist;
+
+        // Calculate and clamp velocities
+        const velocityX        = clampXY(velX * xyMultiplier);
+        const velocityY        = clampXY(velY * xyMultiplier);
+        const rotationVelocity = clampRot(angularForce * rotationMultiplier);
+
+        // Apply GSAP inertia tween
+        gsap.to(target, {
+          inertia: {
+            x:        { velocity: velocityX,        end: 0 },
+            y:        { velocity: velocityY,        end: 0 },
+            rotation: { velocity: rotationVelocity, end: 0 },
+            resistance: inertiaResistance
+          }
+        });
+      });
+    });
+  });
+}
+
+initMomentumBasedHover();
 
 }
