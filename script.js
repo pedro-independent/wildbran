@@ -250,7 +250,6 @@ function initGlobalParallax() {
 
 initGlobalParallax()
 
-
 /* HOMEPAGE */
 if (page === "home") {
 
@@ -258,6 +257,62 @@ if (page === "home") {
 
 /* OUR PRODUCTS */
 if (page === "products") {
+
+/* Horizontal Scroll Section */
+const initHorizontal = () => {
+  const mm = gsap.matchMedia();
+
+  mm.add("(min-width: 992px)", () => {
+    const horizontal = document.querySelector('.section_hsteps');
+    const horizontalContent = horizontal.querySelector('.hsteps-container');
+
+    if (horizontal && horizontalContent) {
+      // main horizontal scroll timeline
+      const tl = gsap.timeline({
+        defaults: { ease: 'none' },
+        scrollTrigger: {
+          trigger: horizontal,
+          start: 'top top',
+          end: () => '+=' + (horizontalContent.scrollWidth - window.innerWidth),
+          pin: true,
+          scrub: 1,
+          invalidateOnRefresh: true,
+        }
+      })
+      .to(horizontalContent, {
+        x: () => -(horizontalContent.scrollWidth - window.innerWidth),
+        ease: 'none',
+      });
+
+      // --- PARALLAX ITEMS ---
+      document.querySelectorAll('[data-parallax-step]').forEach((el) => {
+          const distance = el.dataset.distance || -50; // move in % (positive or negative)
+          const startPercent = el.dataset.start || 25; // optional: where it begins
+          const endPercent = el.dataset.end || distance; // optional: custom end
+  gsap.fromTo(el,
+    { xPercent: startPercent },
+    {
+      xPercent: endPercent,
+      ease: 'none',
+      scrollTrigger: {
+        containerAnimation: tl, // ties to horizontal scroll
+        trigger: el,
+        start: 'left 99%', // adjust as needed
+        end: 'left left',
+        scrub: true,
+      }
+    }
+  );
+});
+    }
+  });
+
+  mm.add("(max-width: 991px)", () => {
+    ScrollTrigger.getAll().forEach(st => st.kill());
+  });
+};
+
+initHorizontal();
 
 }
 
@@ -359,7 +414,7 @@ gsap.to(items, {
   stagger: 0.03,
   scrollTrigger: {
     trigger: section,
-    start: "25% center",
+    start: "15% center",
     end: "bottom center",
     scrub: false
   }
