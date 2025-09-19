@@ -263,8 +263,8 @@ const initHorizontal = () => {
   const mm = gsap.matchMedia();
 
   mm.add("(min-width: 992px)", () => {
-    const horizontal = document.querySelector('.section_hsteps');
-    const horizontalContent = horizontal.querySelector('.hsteps-container');
+    const horizontal = document.querySelector('.section_products');
+    const horizontalContent = horizontal.querySelector('.products-list-wrap');
 
     if (horizontal && horizontalContent) {
       // main horizontal scroll timeline
@@ -297,8 +297,8 @@ const initHorizontal = () => {
       scrollTrigger: {
         containerAnimation: tl, // ties to horizontal scroll
         trigger: el,
-        start: 'left 99%', // adjust as needed
-        end: 'left left',
+        start: 'center 99%', // adjust as needed
+        end: 'center left',
         scrub: true,
       }
     }
@@ -313,6 +313,119 @@ const initHorizontal = () => {
 };
 
 initHorizontal();
+
+/* Basic Filter Setup */
+function initFilterBasic() {
+  // Find all filter groups on the page
+  const groups = document.querySelectorAll('[data-filter-group]');
+
+  groups.forEach((group) => {
+    const buttons = group.querySelectorAll('[data-filter-target]');
+    const items = group.querySelectorAll('[data-filter-name]');
+    const transitionDelay = 600; // Delay for transition effect (in milliseconds)
+
+    // Function to update the status and accessibility attributes of items
+    const updateStatus = (element, shouldBeActive) => {
+      // If the item should be active, set it to "active", otherwise "not-active"
+      element.setAttribute('data-filter-status', shouldBeActive ? 'active' : 'not-active');
+      element.setAttribute('aria-hidden', shouldBeActive ? 'false' : 'true');
+    };
+
+    // Function to handle filtering logic when a button is clicked
+    const handleFilter = (target) => {
+      // Loop through all items and ensure every item transitions out first
+      items.forEach((item) => {
+        const shouldBeActive = target === 'all' || item.getAttribute('data-filter-name') === target;
+        const currentStatus = item.getAttribute('data-filter-status');
+
+        // Only transition items currently visible (status: active)
+        if (currentStatus === 'active') {
+          item.setAttribute('data-filter-status', 'transition-out');
+          // After the transition delay, set the final status
+          setTimeout(() => updateStatus(item, shouldBeActive), transitionDelay);
+        } else {
+          // For items not currently visible, simply update their status after the delay
+          setTimeout(() => updateStatus(item, shouldBeActive), transitionDelay);
+        }
+      });
+
+      // Update the active status for all buttons
+      buttons.forEach((button) => {
+        const isActive = button.getAttribute('data-filter-target') === target;
+        button.setAttribute('data-filter-status', isActive ? 'active' : 'not-active');
+        button.setAttribute('aria-pressed', isActive ? 'true' : 'false'); // Accessibility: indicate active state
+      });
+    };
+
+    // Attach click event listeners to each button
+    buttons.forEach((button) => {
+      button.addEventListener('click', () => {
+        const target = button.getAttribute('data-filter-target');
+
+        // If the button is already active, do nothing
+        if (button.getAttribute('data-filter-status') === 'active') return;
+
+        // Trigger the filter logic with the selected target
+        handleFilter(target);
+      });
+    });
+  });
+}
+
+// Initialize Basic Filter Setup
+initFilterBasic();
+
+/* Modal */
+function initModalBasic() {
+
+  const modalGroup = document.querySelector('[data-modal-group-status]');
+  const modals = document.querySelectorAll('[data-modal-name]');
+  const modalTargets = document.querySelectorAll('[data-modal-target]');
+
+  // Open modal
+  modalTargets.forEach((modalTarget) => {
+    modalTarget.addEventListener('click', function () {
+      const modalTargetName = this.getAttribute('data-modal-target');
+
+      // Close all modals
+      modalTargets.forEach((target) => target.setAttribute('data-modal-status', 'not-active'));
+      modals.forEach((modal) => modal.setAttribute('data-modal-status', 'not-active'));
+
+      // Activate clicked modal
+      document.querySelector(`[data-modal-target="${modalTargetName}"]`).setAttribute('data-modal-status', 'active');
+      document.querySelector(`[data-modal-name="${modalTargetName}"]`).setAttribute('data-modal-status', 'active');
+
+      // Set group to active
+      if (modalGroup) {
+        modalGroup.setAttribute('data-modal-group-status', 'active');
+      }
+    });
+  });
+
+  // Close modal
+  document.querySelectorAll('[data-modal-close]').forEach((closeBtn) => {
+    closeBtn.addEventListener('click', closeAllModals);
+  });
+
+  // Close modal on `Escape` key
+  document.addEventListener('keydown', function (event) {
+    if (event.key === 'Escape') {
+      closeAllModals();
+    }
+  });
+
+  // Function to close all modals
+  function closeAllModals() {
+    modalTargets.forEach((target) => target.setAttribute('data-modal-status', 'not-active'));
+    
+    if (modalGroup) {
+      modalGroup.setAttribute('data-modal-group-status', 'not-active');
+    }
+  }
+}
+
+// Initialize Basic Modal
+initModalBasic();
 
 }
 
