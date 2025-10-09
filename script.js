@@ -2,9 +2,93 @@
 /* CONFIG */
 const page = document.body.dataset.page;
 
-gsap.registerPlugin(ScrollTrigger, Draggable, DrawSVGPlugin, InertiaPlugin);
+gsap.registerPlugin(ScrollTrigger, Draggable, DrawSVGPlugin, InertiaPlugin, SplitText);
 
 /* GLOBAL CODE */
+
+/* Logo Reveal Loader */
+function initLogoRevealLoader() {
+  const loader = document.querySelector('.loader');
+  if (!loader) return;
+  const progressBar = loader.querySelector('.loader__bg-bar');
+  const heroSection = document.querySelector('.section_home-hero');
+  const heroContainer = document.querySelector('.home-hero-container');
+  const heroVideo = document.querySelector('.video-holder');
+  const nav = document.querySelector('.nav-container');
+  const heading = document.querySelector('.home-hero-heading');
+  const paragraph = document.querySelector('.home-hero-p');
+  const button = document.querySelector('[data-button-hero]');
+
+  // defensive checks
+  if (!heading) console.warn('.home-hero-heading not found');
+  if (!paragraph) console.warn('.home-hero-p not found');
+  if (!nav) console.warn('.navbar not found');
+
+  // Split text once
+  const splitHeading = SplitText.create(heading, {
+    type: "lines",
+    autoSplit: true,
+    mask: "lines"
+  });
+
+  const splitParagraph = SplitText.create(paragraph, {
+    type: "lines",
+    autoSplit: true,
+    mask: "lines"
+  });
+
+  // Main loader timeline
+  const loadTimeline = gsap.timeline({
+    defaults: { ease: "expo.inOut", duration: 1.5 }
+  });
+
+  loadTimeline
+    .set(heroSection, { padding: 0 })
+    .set(heroContainer, { borderRadius: 0 })
+    .set(heroVideo, { scale: 1.75 })
+    .set(loader, { display: "block" })
+    .to(progressBar, { scaleX: 1, transformOrigin: "left center" })
+    .to(progressBar, { scaleX: 0, transformOrigin: "right center", duration: 0.5 }, "<")
+    .add("hideContent")
+    .to(heroSection, { padding: "1.25em" })
+    .to(heroContainer, { borderRadius: "1.25em" }, "<")
+    .to(heroVideo, { scale: 1 }, "<")
+
+    .add("headingStart", "<+0.75")
+    .from(splitHeading.lines, {
+      duration: 0.8,
+      yPercent: 110,
+      stagger: 0.1,
+      ease: "expo.out"
+    }, "headingStart")
+
+    .add("paraStart", "headingStart+=0.1")
+    .from(splitParagraph.lines, {
+      duration: 0.8,
+      yPercent: 110,
+      stagger: 0.05,
+      ease: "expo.out"
+    }, "paraStart")
+
+    .fromTo(nav, { yPercent: -100, opacity: 0 }, {
+      duration: 0.75,
+      yPercent: 0,
+      opacity: 1,
+      ease: "expo.Out"
+    }, "headingStart")
+
+    .fromTo(button, { yPercent: 100, opacity: 0 }, {
+      duration: 0.5,
+      yPercent: 0,
+      opacity: 1,
+      ease: "expo.Out"
+    }, "headingStart")
+
+    .to(loader, { yPercent: 101, duration: 1 }, "hideContent")
+    .set(loader, { display: "none" });
+}
+
+initLogoRevealLoader();
 
 /* Check section for navbar color change */
 function initCheckSectionThemeScroll() {
@@ -53,6 +137,7 @@ function initCheckSectionThemeScroll() {
 initCheckSectionThemeScroll();
 
 /* Scroll Direction Detecting */
+//if (window.matchMedia('(min-width: 991px)').matches) {
 function initDetectScrollingDirection() {
   let lastScrollTop = 0;
   const threshold = 10; // Minimal scroll distance to switch to up/down 
@@ -80,7 +165,7 @@ function initDetectScrollingDirection() {
 }
 
 initDetectScrollingDirection();
-
+//}
 
 /* Draw Random Line on hover */
 function initDrawRandomUnderline() {
@@ -175,80 +260,320 @@ initDrawRandomUnderline();
 
 /* Global Parallax Setup */
 function initGlobalParallax() {
-  const mm = gsap.matchMedia()
+  const ctx = gsap.context(() => {
+    document.querySelectorAll('[data-parallax="trigger"]').forEach((trigger) => {
+      // Optional: you can target an element inside a trigger if necessary 
+      const target = trigger.querySelector('[data-parallax="target"]') || trigger
 
-  mm.add(
-    {
-      isMobile: "(max-width:479px)",
-      isMobileLandscape: "(max-width:767px)",
-      isTablet: "(max-width:991px)",
-      isDesktop: "(min-width:992px)"
-    },
-    (context) => {
-      const { isMobile, isMobileLandscape, isTablet } = context.conditions
+      // Get the direction value to decide between xPercent or yPercent tween
+      const direction = trigger.getAttribute("data-parallax-direction") || "vertical"
+      const prop = direction === "horizontal" ? "xPercent" : "yPercent"
+      
+      // Get the scrub value, default is 'true'
+      const scrubAttr = trigger.getAttribute("data-parallax-scrub")
+      const scrub = scrubAttr ? parseFloat(scrubAttr) : true
+      
+      // Get the start position in % 
+      const startAttr = trigger.getAttribute("data-parallax-start")
+      const startVal = startAttr !== null ? parseFloat(startAttr) : 20
+      
+      // Get the end position in %
+      const endAttr = trigger.getAttribute("data-parallax-end")
+      const endVal = endAttr !== null ? parseFloat(endAttr) : -20
+      
+      // Get the start value of the ScrollTrigger
+      const scrollStartRaw = trigger.getAttribute("data-parallax-scroll-start") || "top bottom"
+      const scrollStart = `clamp(${scrollStartRaw})`
+      
+      // Get the end value of the ScrollTrigger  
+      const scrollEndRaw = trigger.getAttribute("data-parallax-scroll-end") || "bottom top"
+      const scrollEnd = `clamp(${scrollEndRaw})`
 
-      const ctx = gsap.context(() => {
-        document.querySelectorAll('[data-parallax="trigger"]').forEach((trigger) => {
-            // Check if this trigger has to be disabled on smaller breakpoints
-            const disable = trigger.getAttribute("data-parallax-disable")
-            if (
-              (disable === "mobile" && isMobile) ||
-              (disable === "mobileLandscape" && isMobileLandscape) ||
-              (disable === "tablet" && isTablet)
-            ) {
-              return
-            }
-            
-            // Optional: you can target an element inside a trigger if necessary 
-            const target = trigger.querySelector('[data-parallax="target"]') || trigger
+      gsap.fromTo(
+        target,
+        { [prop]: startVal },
+        {
+          [prop]: endVal,
+          ease: "none",
+          scrollTrigger: {
+            trigger,
+            start: scrollStart,
+            end: scrollEnd,
+            scrub,
+          },
+        }
+      )
+    })
+  })
 
-            // Get the direction value to decide between xPercent or yPercent tween
-            const direction = trigger.getAttribute("data-parallax-direction") || "vertical"
-            const prop = direction === "horizontal" ? "xPercent" : "yPercent"
-            
-            // Get the scrub value, our default is 'true' because that feels nice with Lenis
-            const scrubAttr = trigger.getAttribute("data-parallax-scrub")
-            const scrub = scrubAttr ? parseFloat(scrubAttr) : true
-            
-            // Get the start position in % 
-            const startAttr = trigger.getAttribute("data-parallax-start")
-            const startVal = startAttr !== null ? parseFloat(startAttr) : 20
-            
-            // Get the end position in %
-            const endAttr = trigger.getAttribute("data-parallax-end")
-            const endVal = endAttr !== null ? parseFloat(endAttr) : -20
-            
-            // Get the start value of the ScrollTrigger
-            const scrollStartRaw = trigger.getAttribute("data-parallax-scroll-start") || "top bottom"
-            const scrollStart = `clamp(${scrollStartRaw})`
-            
-           // Get the end value of the ScrollTrigger  
-            const scrollEndRaw = trigger.getAttribute("data-parallax-scroll-end") || "bottom top"
-            const scrollEnd = `clamp(${scrollEndRaw})`
-
-            gsap.fromTo(
-              target,
-              { [prop]: startVal },
-              {
-                [prop]: endVal,
-                ease: "none",
-                scrollTrigger: {
-                  trigger,
-                  start: scrollStart,
-                  end: scrollEnd,
-                  scrub,
-                },
-              }
-            )
-          })
-      })
-
-      return () => ctx.revert()
-    }
-  )
+  return () => ctx.revert()
 }
 
 initGlobalParallax()
+
+
+/* MOBILE MENU */
+function initMobileMenu() {
+  if (window.matchMedia('(max-width: 991px)').matches) {
+
+    const menuBtn = document.querySelector('.menu-btn');
+    const menuBg = document.querySelector('.menu-bg');
+    const navMobile = document.querySelector('.nav-mobile');
+
+    if (!menuBtn || !menuBg || !navMobile) return; // safety check
+
+    // Ensure initial states
+    gsap.set(menuBg, { height: '0%' });
+
+    // Create timeline (paused initially)
+    const tl = gsap.timeline({ paused: true, reversed: true });
+
+    tl.to(menuBg, {
+      display: 'block',
+      height: '100svh',
+      duration: 0.5,
+      ease: 'power2.inOut'
+    }).to(navMobile, {
+      display: 'flex',
+      duration: 0
+    }, '-=0.3'); // overlap slightly
+
+    // Toggle timeline on button click
+    menuBtn.addEventListener('click', () => {
+      if (tl.reversed()) {
+        tl.play();
+      } else {
+        tl.reverse();
+      }
+    });
+  }
+}
+
+initMobileMenu();
+
+
+/* Basic GSAP Slider */
+function initBasicGSAPSlider() {
+  document.querySelectorAll('[data-gsap-slider-init]').forEach(root => {
+    if (root._sliderDraggable) root._sliderDraggable.kill();
+
+    const collection = root.querySelector('[data-gsap-slider-collection]');
+    const track      = root.querySelector('[data-gsap-slider-list]');
+    const items      = Array.from(root.querySelectorAll('[data-gsap-slider-item]'));
+    const controls   = Array.from(root.querySelectorAll('[data-gsap-slider-control]'));
+
+    // Inject aria attributes
+    root.setAttribute('role','region');
+    root.setAttribute('aria-roledescription','carousel');
+    root.setAttribute('aria-label','Slider');
+    collection.setAttribute('role','group');
+    collection.setAttribute('aria-roledescription','Slides List');
+    collection.setAttribute('aria-label','Slides');
+    items.forEach((slide,i) => {
+      slide.setAttribute('role','group');
+      slide.setAttribute('aria-roledescription','Slide');
+      slide.setAttribute('aria-label',`Slide ${i+1} of ${items.length}`);
+      slide.setAttribute('aria-hidden','true');
+      slide.setAttribute('aria-selected','false');
+      slide.setAttribute('tabindex','-1');
+    });
+    controls.forEach(btn => {
+      const dir = btn.getAttribute('data-gsap-slider-control');
+      btn.setAttribute('role','button');
+      btn.setAttribute('aria-label', dir==='prev' ? 'Previous Slide' : 'Next Slide');
+      btn.disabled = true;
+      btn.setAttribute('aria-disabled','true');
+    });
+
+    // Determine if slider runs
+    const styles      = getComputedStyle(root);
+    const statusVar   = styles.getPropertyValue('--slider-status').trim();
+    let   spvVar      = parseFloat(styles.getPropertyValue('--slider-spv'));
+    const rect        = items[0].getBoundingClientRect();
+    const marginRight = parseFloat(getComputedStyle(items[0]).marginRight);
+    const slideW      = rect.width + marginRight;
+    if (isNaN(spvVar)) {
+      spvVar = collection.clientWidth / slideW;
+    }
+    const spv           = Math.max(1, Math.min(spvVar, items.length));
+    const sliderEnabled = statusVar==='on' && spv < items.length;
+    root.setAttribute('data-gsap-slider-status', sliderEnabled ? 'active' : 'not-active');
+
+    if (!sliderEnabled) {
+      // Teardown when disabled
+      track.removeAttribute('style');
+      track.onmouseenter = null;
+      track.onmouseleave = null;
+      track.removeAttribute('data-gsap-slider-list-status');
+      root.removeAttribute('role');
+      root.removeAttribute('aria-roledescription');
+      root.removeAttribute('aria-label');
+      collection.removeAttribute('role');
+      collection.removeAttribute('aria-roledescription');
+      collection.removeAttribute('aria-label');
+      items.forEach(slide => {
+        slide.removeAttribute('role');
+        slide.removeAttribute('aria-roledescription');
+        slide.removeAttribute('aria-label');
+        slide.removeAttribute('aria-hidden');
+        slide.removeAttribute('aria-selected');
+        slide.removeAttribute('tabindex');
+        slide.removeAttribute('data-gsap-slider-item-status');
+      });
+      controls.forEach(btn => {
+        btn.disabled = false;
+        btn.removeAttribute('role');
+        btn.removeAttribute('aria-label');
+        btn.removeAttribute('aria-disabled');
+        btn.removeAttribute('data-gsap-slider-control-status');
+      });
+      return;
+    }
+
+    // Track hover state
+    track.onmouseenter = () => {
+      track.setAttribute('data-gsap-slider-list-status','grab');
+    };
+    track.onmouseleave = () => {
+      track.removeAttribute('data-gsap-slider-list-status');
+    };
+
+    //Ccalculate bounds and snap points
+    const vw        = collection.clientWidth;
+    const tw        = track.scrollWidth;
+    const maxScroll = Math.max(tw - vw, 0);
+    const minX      = -maxScroll;
+    const maxX      = 0;
+    const maxIndex  = maxScroll / slideW;
+    const full      = Math.floor(maxIndex);
+    const snapPoints = [];
+    for (let i = 0; i <= full; i++) {
+      snapPoints.push(-i * slideW);
+    }
+    if (full < maxIndex) {
+      snapPoints.push(-maxIndex * slideW);
+    }
+
+    let activeIndex    = 0;
+    const setX         = gsap.quickSetter(track,'x','px');
+    let collectionRect = collection.getBoundingClientRect();
+
+    function updateStatus(x) {
+      if (x > maxX || x < minX) {
+        return;
+      }
+
+      // Clamp and find closest snap
+      const calcX = x > maxX ? maxX : (x < minX ? minX : x);
+      let closest = snapPoints[0];
+      snapPoints.forEach(pt => {
+        if (Math.abs(pt - calcX) < Math.abs(closest - calcX)) {
+          closest = pt;
+        }
+      });
+      activeIndex = snapPoints.indexOf(closest);
+
+      // Update Slide Attributes
+      items.forEach((slide,i) => {
+        const r           = slide.getBoundingClientRect();
+        const leftEdge    = r.left - collectionRect.left;
+        const slideCenter = leftEdge + r.width/2;
+        const inView      = slideCenter > 0 && slideCenter < collectionRect.width;
+        const status      = i === activeIndex ? 'active' : inView ? 'inview' : 'not-active';
+
+        slide.setAttribute('data-gsap-slider-item-status', status);
+        slide.setAttribute('aria-selected',    i === activeIndex ? 'true' : 'false');
+        slide.setAttribute('aria-hidden',      inView ? 'false' : 'true');
+        slide.setAttribute('tabindex',         i === activeIndex ? '0'    : '-1');
+      });
+
+      // Update Controls
+      controls.forEach(btn => {
+        const dir = btn.getAttribute('data-gsap-slider-control');
+        const can = dir === 'prev'
+          ? activeIndex > 0
+          : activeIndex < snapPoints.length - 1;
+
+        btn.disabled = !can;
+        btn.setAttribute('aria-disabled', can ? 'false' : 'true');
+        btn.setAttribute('data-gsap-slider-control-status', can ? 'active' : 'not-active');
+      });
+    }
+
+    controls.forEach(btn => {
+      const dir = btn.getAttribute('data-gsap-slider-control');
+      btn.addEventListener('click', () => {
+        if (btn.disabled) return;
+        const delta = dir === 'next' ? 1 : -1;
+        const target = activeIndex + delta;
+        gsap.to(track, {
+          duration: 0.4,
+          x: snapPoints[target],
+          onUpdate: () => updateStatus(gsap.getProperty(track,'x'))
+        });
+      });
+    });
+
+    // Initialize Draggable
+    root._sliderDraggable = Draggable.create(track, {
+      type: 'x',
+      // cursor: 'inherit',
+      // activeCursor: 'inherit',
+      inertia: true,
+      bounds: {minX, maxX},
+      throwResistance: 2000,
+      dragResistance: 0.05,
+      maxDuration: 0.6,
+      minDuration: 0.2,
+      edgeResistance: 0.75,
+      snap: {x: snapPoints, duration: 0.4},
+      onPress() {
+        track.setAttribute('data-gsap-slider-list-status','grabbing');
+        collectionRect = collection.getBoundingClientRect();
+      },
+      onDrag() {
+        setX(this.x);
+        updateStatus(this.x);
+      },
+      onThrowUpdate() {
+        setX(this.x);
+        updateStatus(this.x);
+      },
+      onThrowComplete() {
+        setX(this.endX);
+        updateStatus(this.endX);
+        track.setAttribute('data-gsap-slider-list-status','grab');
+      },
+      onRelease() {
+        setX(this.x);
+        updateStatus(this.x);
+        track.setAttribute('data-gsap-slider-list-status','grab');
+      }
+    })[0];
+
+    // Initial state
+    setX(0);
+    updateStatus(0);
+  });
+}
+
+// Debouncer: For resizing the window
+function debounceOnWidthChange(fn, ms) {
+  let last = innerWidth, timer;
+  return function(...args) {
+    clearTimeout(timer);
+    timer = setTimeout(() => {
+      if (innerWidth !== last) {
+        last = innerWidth;
+        fn.apply(this, args);
+      }
+    }, ms);
+  };
+}
+
+window.addEventListener('resize', debounceOnWidthChange(initBasicGSAPSlider, 200));
+
+initBasicGSAPSlider();
 
 /* HOMEPAGE */
 if (page === "home") {
@@ -314,117 +639,152 @@ const initHorizontal = () => {
 
 initHorizontal();
 
-/* Basic Filter Setup */
+/* 1. Your Original Filter Script for the Main Page */
 function initFilterBasic() {
-  // Find all filter groups on the page
   const groups = document.querySelectorAll('[data-filter-group]');
-
   groups.forEach((group) => {
     const buttons = group.querySelectorAll('[data-filter-target]');
-    const items = group.querySelectorAll('[data-filter-name]');
-    const transitionDelay = 600; // Delay for transition effect (in milliseconds)
+    const items = group.querySelectorAll('[data-filter-name]'); // Assuming .products-select-item has this
+    const transitionDelay = 600;
 
-    // Function to update the status and accessibility attributes of items
     const updateStatus = (element, shouldBeActive) => {
-      // If the item should be active, set it to "active", otherwise "not-active"
       element.setAttribute('data-filter-status', shouldBeActive ? 'active' : 'not-active');
-      element.setAttribute('aria-hidden', shouldBeActive ? 'false' : 'true');
+      element.setAttribute('aria-hidden', !shouldBeActive);
     };
 
-    // Function to handle filtering logic when a button is clicked
     const handleFilter = (target) => {
-      // Loop through all items and ensure every item transitions out first
-      items.forEach((item) => {
-        const shouldBeActive = target === 'all' || item.getAttribute('data-filter-name') === target;
+      // Note: your filter script targets items with `data-filter-name`, ensure your .products-select-item has this attribute.
+      const itemsToFilter = group.querySelectorAll('.products-select-item');
+      itemsToFilter.forEach((item) => {
+        const shouldBeActive = target === 'all' || item.getAttribute('data-filter-target') === target;
         const currentStatus = item.getAttribute('data-filter-status');
 
-        // Only transition items currently visible (status: active)
         if (currentStatus === 'active') {
           item.setAttribute('data-filter-status', 'transition-out');
-          // After the transition delay, set the final status
           setTimeout(() => updateStatus(item, shouldBeActive), transitionDelay);
         } else {
-          // For items not currently visible, simply update their status after the delay
           setTimeout(() => updateStatus(item, shouldBeActive), transitionDelay);
         }
       });
 
-      // Update the active status for all buttons
       buttons.forEach((button) => {
         const isActive = button.getAttribute('data-filter-target') === target;
         button.setAttribute('data-filter-status', isActive ? 'active' : 'not-active');
-        button.setAttribute('aria-pressed', isActive ? 'true' : 'false'); // Accessibility: indicate active state
+        button.setAttribute('aria-pressed', isActive);
       });
     };
 
-    // Attach click event listeners to each button
     buttons.forEach((button) => {
       button.addEventListener('click', () => {
         const target = button.getAttribute('data-filter-target');
-
-        // If the button is already active, do nothing
         if (button.getAttribute('data-filter-status') === 'active') return;
-
-        // Trigger the filter logic with the selected target
         handleFilter(target);
       });
     });
   });
 }
 
-// Initialize Basic Filter Setup
-initFilterBasic();
+/* 2. Simplified Script to Sync Filter Clicks to the Modal */
+function initProductSync() {
+    const productSelectors = document.querySelectorAll('.products-select-item');
+    const modal = document.querySelector('[data-modal-name="product-info"]');
+    if (!modal || !productSelectors.length) return;
 
-/* Modal */
+    productSelectors.forEach(selector => {
+        selector.addEventListener('click', function() {
+            // Get the unique name from the clicked product selector
+            const productName = this.getAttribute('data-filter-target');
+            if (!productName) return;
+            
+            // Deactivate ALL product items inside the modal first
+            modal.querySelectorAll('.w-dyn-item').forEach(item => {
+                item.setAttribute('data-filter-status', 'not-active');
+            });
+
+            // Find the single product inside the modal that matches by name
+            const targetModalItem = modal.querySelector(`.w-dyn-item[data-product-name="${productName}"]`);
+            
+            // Activate it
+            if (targetModalItem) {
+                targetModalItem.setAttribute('data-filter-status', 'active');
+            }
+        });
+    });
+}
+
+
+/* 3. Your Modal Script (Reads the synced status) */
 function initModalBasic() {
-
   const modalGroup = document.querySelector('[data-modal-group-status]');
   const modals = document.querySelectorAll('[data-modal-name]');
   const modalTargets = document.querySelectorAll('[data-modal-target]');
+  const productInfoModal = document.querySelector('[data-modal-name="product-info"]');
 
-  // Open modal
+  function updateProductInfoModal(clickedBtn) {
+    if (!productInfoModal || !clickedBtn) return;
+    const targetType = clickedBtn.getAttribute('data-info-target');
+    const productWrapper = clickedBtn.closest('.products-item');
+    if (!productWrapper || !targetType) return;
+    const clickedCategoryId = productWrapper.getAttribute('data-category-id');
+    if (!clickedCategoryId) return;
+
+    productInfoModal.querySelectorAll('.w-dyn-item').forEach(item => item.classList.remove('product-visible'));
+    productInfoModal.querySelectorAll('.modal-cms').forEach(info => info.classList.remove('active'));
+    
+    const targetProduct = productInfoModal.querySelector(
+      `.w-dyn-item[data-category-id="${clickedCategoryId}"][data-filter-status="active"]`
+    );
+
+    if (targetProduct) {
+      targetProduct.classList.add('product-visible');
+      const targetInfoSection = targetProduct.querySelector(`.modal-cms[data-info-type="${targetType}"]`);
+      if (targetInfoSection) {
+        targetInfoSection.classList.add('active');
+      }
+    }
+  }
+
   modalTargets.forEach((modalTarget) => {
     modalTarget.addEventListener('click', function () {
       const modalTargetName = this.getAttribute('data-modal-target');
-
-      // Close all modals
       modalTargets.forEach((target) => target.setAttribute('data-modal-status', 'not-active'));
       modals.forEach((modal) => modal.setAttribute('data-modal-status', 'not-active'));
-
-      // Activate clicked modal
       document.querySelector(`[data-modal-target="${modalTargetName}"]`).setAttribute('data-modal-status', 'active');
       document.querySelector(`[data-modal-name="${modalTargetName}"]`).setAttribute('data-modal-status', 'active');
-
-      // Set group to active
       if (modalGroup) {
         modalGroup.setAttribute('data-modal-group-status', 'active');
+      }
+      if (modalTargetName === 'product-info') {
+        updateProductInfoModal(this);
       }
     });
   });
 
-  // Close modal
+  function closeAllModals() {
+    modalTargets.forEach((target) => target.setAttribute('data-modal-status', 'not-active'));
+    modals.forEach((modal) => modal.setAttribute('data-modal-status', 'not-active'));
+    if (modalGroup) {
+      modalGroup.setAttribute('data-modal-group-status', 'not-active');
+    }
+    if (productInfoModal) {
+      productInfoModal.querySelectorAll('.w-dyn-item').forEach(item => item.classList.remove('product-visible'));
+      productInfoModal.querySelectorAll('.modal-cms').forEach(info => info.classList.remove('active'));
+    }
+  }
+
   document.querySelectorAll('[data-modal-close]').forEach((closeBtn) => {
     closeBtn.addEventListener('click', closeAllModals);
   });
-
-  // Close modal on `Escape` key
   document.addEventListener('keydown', function (event) {
     if (event.key === 'Escape') {
       closeAllModals();
     }
   });
-
-  // Function to close all modals
-  function closeAllModals() {
-    modalTargets.forEach((target) => target.setAttribute('data-modal-status', 'not-active'));
-    
-    if (modalGroup) {
-      modalGroup.setAttribute('data-modal-group-status', 'not-active');
-    }
-  }
 }
 
-// Initialize Basic Modal
+// Initialize all three systems
+initFilterBasic();
+initProductSync();
 initModalBasic();
 
 }
@@ -432,7 +792,9 @@ initModalBasic();
 /* MANUFACTURING */
 if (page === "manufacturing") {
 
-    const slides = document.querySelectorAll('.section_tabs .slide')
+if (window.matchMedia('(min-width: 991px)').matches) {
+function initTabsScroll() {
+  const slides = document.querySelectorAll('.section_tabs .slide')
 
     slides.forEach(slide => {
         const contentWrapper = slide.querySelector('.content-wrapper')
@@ -466,6 +828,10 @@ if (page === "manufacturing") {
             }
         })
     })
+}
+
+initTabsScroll();
+}
 
 /* Capabilities Accordion */
     function initAccordionCSS() {
@@ -492,10 +858,11 @@ if (page === "manufacturing") {
   });
 }
 
-  initAccordionCSS();
+initAccordionCSS();
 
 
 /* Polaroid Scatter */
+function initPolaroidScatter() {
   const section = document.querySelector(".section_polaroid");
   const items = document.querySelectorAll(".polaroid-item");
 
@@ -532,6 +899,10 @@ gsap.to(items, {
     scrub: false
   }
 });
+}
+
+initPolaroidScatter();
+
 
 /* Draggable Polaroid */
 function initDraggableStickers() {
@@ -570,6 +941,7 @@ function initDraggableStickers() {
 initDraggableStickers();
 
 /* Horizontal Scroll Section */
+if (window.matchMedia('(min-width: 991px)').matches) {
 const initHorizontal = () => {
   const mm = gsap.matchMedia();
 
@@ -624,8 +996,11 @@ const initHorizontal = () => {
 };
 
 initHorizontal();
+}
+
 
 }
+
 
 /* CONTACTS */
 if (page === "contacts") {
