@@ -44,7 +44,7 @@ function initLogoRevealLoader() {
 
   // Main loader timeline
   const loadTimeline = gsap.timeline({
-    defaults: { ease: "expo.inOut", duration: 1.5 },
+    defaults: { ease: "expo.inOut", duration: 1.75 },
   });
 
   loadTimeline
@@ -667,8 +667,6 @@ if (page === "products") {
   sortProductsByOrder();
 
 
-
-
   /* Horizontal Scroll Section */
   const initHorizontal = () => {
     const mm = gsap.matchMedia();
@@ -733,25 +731,22 @@ if (page === "products") {
 /* Filter Products */
 function initFilterBasic() {
   const groups = document.querySelectorAll("[data-filter-group]");
+
   groups.forEach((group) => {
     const buttons = group.querySelectorAll("[data-filter-target]");
     const items = group.querySelectorAll("[data-filter-name]");
     const transitionDelay = 600;
 
     const updateStatus = (element, shouldBeActive) => {
-      element.setAttribute(
-        "data-filter-status",
-        shouldBeActive ? "active" : "not-active"
-      );
+      element.setAttribute("data-filter-status", shouldBeActive ? "active" : "not-active");
       element.setAttribute("aria-hidden", !shouldBeActive);
     };
 
     const handleFilter = (target) => {
       const itemsToFilter = group.querySelectorAll(".products-select-item");
+
       itemsToFilter.forEach((item) => {
-        const shouldBeActive =
-          target === "all" ||
-          item.getAttribute("data-filter-target") === target;
+        const shouldBeActive = target === "all" || item.getAttribute("data-filter-target") === target;
         const currentStatus = item.getAttribute("data-filter-status");
 
         if (currentStatus === "active") {
@@ -764,10 +759,7 @@ function initFilterBasic() {
 
       buttons.forEach((button) => {
         const isActive = button.getAttribute("data-filter-target") === target;
-        button.setAttribute(
-          "data-filter-status",
-          isActive ? "active" : "not-active"
-        );
+        button.setAttribute("data-filter-status", isActive ? "active" : "not-active");
         button.setAttribute("aria-pressed", isActive);
       });
     };
@@ -782,7 +774,6 @@ function initFilterBasic() {
   });
 }
 
-/* 2. Sync Product Selection with Modal */
 function initProductSync() {
   const productSelectors = document.querySelectorAll(".products-select-item");
   const modal = document.querySelector('[data-modal-name="product-info"]');
@@ -808,16 +799,12 @@ function initProductSync() {
   });
 }
 
-/* 3. Modal Management + Tab Switching */
 function initModalBasic() {
   const modalGroup = document.querySelector("[data-modal-group-status]");
   const modals = document.querySelectorAll("[data-modal-name]");
   const modalTargets = document.querySelectorAll("[data-modal-target]");
-  const productInfoModal = document.querySelector(
-    '[data-modal-name="product-info"]'
-  );
+  const productInfoModal = document.querySelector('[data-modal-name="product-info"]');
 
-  // --- Modal Tabs ---
   function initModalTabs() {
     if (!productInfoModal) return;
     const modalTabs = productInfoModal.querySelectorAll(".modal-tabs-item");
@@ -827,22 +814,14 @@ function initModalBasic() {
         const targetType = this.getAttribute("data-info-target");
         if (!targetType) return;
 
-        // Remove active from all tabs
         modalTabs.forEach((t) => t.classList.remove("active"));
         this.classList.add("active");
 
-        // Find currently visible product
-        const visibleProduct = productInfoModal.querySelector(
-          ".w-dyn-item.product-visible"
-        );
+        const visibleProduct = productInfoModal.querySelector(".w-dyn-item.product-visible");
         if (!visibleProduct) return;
 
-        // Hide all modal-cms
-        visibleProduct
-          .querySelectorAll(".modal-cms")
-          .forEach((cms) => cms.classList.remove("active"));
+        visibleProduct.querySelectorAll(".modal-cms").forEach((cms) => cms.classList.remove("active"));
 
-        // Show target cms
         const targetCMS = visibleProduct.querySelector(
           `.modal-cms[data-info-type="${targetType}"]`
         );
@@ -851,21 +830,22 @@ function initModalBasic() {
     });
   }
 
-  // --- Modal Update Logic (called when opening modal) ---
   function updateProductInfoModal(clickedBtn) {
     if (!productInfoModal || !clickedBtn) return;
+
     const productWrapper = clickedBtn.closest(".products-item");
     const targetType = clickedBtn.getAttribute("data-info-target");
     if (!productWrapper || !targetType) return;
+
     const clickedCategoryId = productWrapper.getAttribute("data-category-id");
     if (!clickedCategoryId) return;
 
-    productInfoModal
-      .querySelectorAll(".w-dyn-item")
-      .forEach((item) => item.classList.remove("product-visible"));
-    productInfoModal
-      .querySelectorAll(".modal-cms")
-      .forEach((info) => info.classList.remove("active"));
+    productInfoModal.querySelectorAll(".w-dyn-item").forEach((item) =>
+      item.classList.remove("product-visible")
+    );
+    productInfoModal.querySelectorAll(".modal-cms").forEach((info) =>
+      info.classList.remove("active")
+    );
 
     const targetProduct = productInfoModal.querySelector(
       `.w-dyn-item[data-category-id="${clickedCategoryId}"][data-filter-status="active"]`
@@ -879,7 +859,6 @@ function initModalBasic() {
       );
       if (targetInfoSection) targetInfoSection.classList.add("active");
 
-      // Highlight matching tab
       const modalTabs = productInfoModal.querySelectorAll(".modal-tabs-item");
       modalTabs.forEach((tab) => {
         const tabType = tab.getAttribute("data-info-target");
@@ -888,29 +867,29 @@ function initModalBasic() {
     }
   }
 
-  // --- Modal Opening ---
   modalTargets.forEach((modalTarget) => {
     modalTarget.addEventListener("click", function () {
       const modalTargetName = this.getAttribute("data-modal-target");
+
       modalTargets.forEach((target) =>
         target.setAttribute("data-modal-status", "not-active")
       );
       modals.forEach((modal) =>
         modal.setAttribute("data-modal-status", "not-active")
       );
+
       document
         .querySelector(`[data-modal-target="${modalTargetName}"]`)
         ?.setAttribute("data-modal-status", "active");
       document
         .querySelector(`[data-modal-name="${modalTargetName}"]`)
         ?.setAttribute("data-modal-status", "active");
-      if (modalGroup)
-        modalGroup.setAttribute("data-modal-group-status", "active");
+
+      if (modalGroup) modalGroup.setAttribute("data-modal-group-status", "active");
       if (modalTargetName === "product-info") updateProductInfoModal(this);
     });
   });
 
-  // --- Close All Modals ---
   function closeAllModals() {
     modalTargets.forEach((target) =>
       target.setAttribute("data-modal-status", "not-active")
@@ -918,36 +897,37 @@ function initModalBasic() {
     modals.forEach((modal) =>
       modal.setAttribute("data-modal-status", "not-active")
     );
-    if (modalGroup)
-      modalGroup.setAttribute("data-modal-group-status", "not-active");
+
+    if (modalGroup) modalGroup.setAttribute("data-modal-group-status", "not-active");
+
     if (productInfoModal) {
-      productInfoModal
-        .querySelectorAll(".w-dyn-item")
-        .forEach((item) => item.classList.remove("product-visible"));
-      productInfoModal
-        .querySelectorAll(".modal-cms")
-        .forEach((info) => info.classList.remove("active"));
-      productInfoModal
-        .querySelectorAll(".modal-tabs-item")
-        .forEach((tab) => tab.classList.remove("active"));
+      productInfoModal.querySelectorAll(".w-dyn-item").forEach((item) =>
+        item.classList.remove("product-visible")
+      );
+      productInfoModal.querySelectorAll(".modal-cms").forEach((info) =>
+        info.classList.remove("active")
+      );
+      productInfoModal.querySelectorAll(".modal-tabs-item").forEach((tab) =>
+        tab.classList.remove("active")
+      );
     }
   }
 
   document
     .querySelectorAll("[data-modal-close]")
     .forEach((closeBtn) => closeBtn.addEventListener("click", closeAllModals));
+
   document.addEventListener("keydown", function (event) {
     if (event.key === "Escape") closeAllModals();
   });
 
-  // Init modal tabs
   initModalTabs();
 }
 
-// Initialize all systems
 initFilterBasic();
 initProductSync();
 initModalBasic();
+
 
 
 }
@@ -1271,8 +1251,12 @@ function initSwiperSlider() {
     const swiper = new Swiper(swiperSliderWrap, {
       slidesPerView: 1,
       speed: 600,
-      mousewheel: true,
       grabCursor: true,
+      loop: true,
+      autoplay: {
+        delay: 2500,
+        disableOnInteraction: false,
+      },
       breakpoints: {
         // when window width is >= 480px
         480: {
