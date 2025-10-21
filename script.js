@@ -120,6 +120,93 @@ initLogoRevealLoader();
 /* Page Transition */
 
 
+/* Global Text Reveals */
+const splitConfig = {
+  lines: { duration: 0.8, stagger: 0.08 },
+  words: { duration: 0.6, stagger: 0.06 },
+  chars: { duration: 0.4, stagger: 0.01 }
+}
+
+function initMaskTextScrollReveal() {
+  document.querySelectorAll('[data-split="heading"]').forEach(heading => {
+    const type = heading.dataset.splitReveal || 'lines'
+    const typesToSplit =
+      type === 'lines' ? ['lines'] :
+      type === 'words' ? ['lines','words'] :
+      ['lines','words','chars']
+    
+    SplitText.create(heading, {
+      type: typesToSplit.join(', '),
+      mask: 'lines',
+      autoSplit: true,
+      linesClass: 'line',
+      wordsClass: 'word',
+      charsClass: 'letter',
+      onSplit: function(instance) {
+        const targets = instance[type]
+        const config = splitConfig[type]
+        
+        return gsap.from(targets, {
+          yPercent: 110,
+          duration: config.duration,
+          stagger: config.stagger,
+          ease: 'expo.out',
+          scrollTrigger: {
+            trigger: heading,
+            start: 'clamp(top 80%)',
+            once: true
+          }
+        });
+      }
+    })
+  })
+}
+
+  let headings = document.querySelectorAll('[data-split="heading"]')
+  
+  headings.forEach(heading => {
+    gsap.set(heading, { autoAlpha: 1 })
+  });
+
+initMaskTextScrollReveal()
+
+/* Product Reveal Animation */
+const productRevealConfig = {
+  duration: 0.8,
+  stagger: 0.1,
+  ease: 'expo.out'
+}
+
+function initProductReveal() {
+  const products = document.querySelectorAll('[data-product-reveal]')
+
+  products.forEach(product => {
+    gsap.set(product, {
+      //autoAlpha: 0,
+      scale: 0,
+      transformOrigin: 'center center'
+    })
+
+    gsap.to(product, {
+      //autoAlpha: 1,
+      scale: 1,
+      duration: productRevealConfig.duration,
+      stagger: productRevealConfig.stagger,
+      ease: productRevealConfig.ease,
+      scrollTrigger: {
+        trigger: product,
+        start: 'top 90%',
+        //markers: true,
+        once: true
+      }
+    })
+  })
+}
+
+initProductReveal()
+
+
+
 
 /* Check section for navbar color change */
 function initCheckSectionThemeScroll() {
