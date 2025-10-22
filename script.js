@@ -11,10 +11,23 @@ gsap.registerPlugin(
 
 /* GLOBAL CODE */
 
-/* Logo Reveal Loader */
-function initLogoRevealLoader() {
+/* Loader Reveal */
+function initRevealLoader() {
   const loader = document.querySelector(".loader");
   if (!loader) return;
+
+  const hasVisited = sessionStorage.getItem("loaderPlayed");
+
+  if (hasVisited) {
+    loader.style.display = "none";
+    document.querySelector(".section_home-hero")?.style.setProperty("padding", "1.25em");
+    document.querySelector(".home-hero-container")?.style.setProperty("border-radius", "1.25em");
+    document.querySelector(".video-holder")?.style.setProperty("transform", "scale(1)");
+    return;
+  }
+
+  sessionStorage.setItem("loaderPlayed", "true");
+
   const progressBar = loader.querySelector(".loader__bg-bar");
   const heroSection = document.querySelector(".section_home-hero");
   const heroContainer = document.querySelector(".home-hero-container");
@@ -24,7 +37,7 @@ function initLogoRevealLoader() {
   const paragraph = document.querySelector(".home-hero-p");
   const button = document.querySelector("[data-button-hero]");
 
-  // defensive checks
+  // Defensive checks
   if (!heading) console.warn(".home-hero-heading not found");
   if (!paragraph) console.warn(".home-hero-p not found");
   if (!nav) console.warn(".navbar not found");
@@ -53,11 +66,7 @@ function initLogoRevealLoader() {
     .set(heroVideo, { scale: 1.75 })
     .set(loader, { display: "block" })
     .to(progressBar, { scaleX: 1, transformOrigin: "left center" })
-    .to(
-      progressBar,
-      { scaleX: 0, transformOrigin: "right center", duration: 0.5 },
-      "<"
-    )
+    .to(progressBar, { scaleX: 0, transformOrigin: "right center", duration: 0.5 }, "<")
     .add("hideContent")
     .to(heroSection, { padding: "1.25em" })
     .to(heroContainer, { borderRadius: "1.25em" }, "<")
@@ -66,56 +75,32 @@ function initLogoRevealLoader() {
     .add("headingStart", "<+0.75")
     .from(
       splitHeading.lines,
-      {
-        duration: 0.8,
-        yPercent: 110,
-        stagger: 0.1,
-        ease: "expo.out",
-      },
+      { duration: 0.8, yPercent: 110, stagger: 0.1, ease: "expo.out" },
       "headingStart"
     )
-
     .add("paraStart", "headingStart+=0.1")
     .from(
       splitParagraph.lines,
-      {
-        duration: 0.8,
-        yPercent: 110,
-        stagger: 0.05,
-        ease: "expo.out",
-      },
+      { duration: 0.8, yPercent: 110, stagger: 0.05, ease: "expo.out" },
       "paraStart"
     )
-
     .fromTo(
       nav,
       { yPercent: -100, opacity: 0 },
-      {
-        duration: 0.75,
-        yPercent: 0,
-        opacity: 1,
-        ease: "expo.Out",
-      },
+      { duration: 0.75, yPercent: 0, opacity: 1, ease: "expo.Out" },
       "headingStart"
     )
-
     .fromTo(
       button,
       { yPercent: 100, opacity: 0 },
-      {
-        duration: 0.5,
-        yPercent: 0,
-        opacity: 1,
-        ease: "expo.Out",
-      },
+      { duration: 0.5, yPercent: 0, opacity: 1, ease: "expo.Out" },
       "headingStart"
     )
-
     .to(loader, { yPercent: 101, duration: 1 }, "hideContent")
     .set(loader, { display: "none" });
 }
 
-initLogoRevealLoader();
+initRevealLoader();
 
 /* Page Transition */
 
@@ -204,9 +189,6 @@ function initProductReveal() {
 }
 
 initProductReveal()
-
-
-
 
 /* Check section for navbar color change */
 function initCheckSectionThemeScroll() {
@@ -1000,9 +982,8 @@ function initModalBasic() {
     }
   }
 
-  document
-    .querySelectorAll("[data-modal-close]")
-    .forEach((closeBtn) => closeBtn.addEventListener("click", closeAllModals));
+  document.querySelectorAll("[data-modal-close]").forEach((closeBtn) =>
+    closeBtn.addEventListener("click", closeAllModals));
 
   document.addEventListener("keydown", function (event) {
     if (event.key === "Escape") closeAllModals();
