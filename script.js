@@ -6,7 +6,8 @@ gsap.registerPlugin(
   Draggable,
   DrawSVGPlugin,
   InertiaPlugin,
-  SplitText
+  SplitText,
+  MorphSVGPlugin
 );
 
 /* GLOBAL CODE */
@@ -674,8 +675,9 @@ function initMobileMenu() {
     const menuBtn = document.querySelector(".menu-btn");
     const menuBg = document.querySelector(".menu-bg");
     const navMobile = document.querySelector(".nav-mobile");
+    const navLogo = document.querySelector(".wildbran-logo");
 
-    if (!menuBtn || !menuBg || !navMobile) return; // safety check
+    if (!menuBtn || !menuBg || !navMobile || !navLogo) return; // safety check
 
     // Ensure initial states
     gsap.set(menuBg, { height: "0%" });
@@ -701,14 +703,46 @@ function initMobileMenu() {
     menuBtn.addEventListener("click", () => {
       if (tl.reversed()) {
         tl.play();
+        document.body.style.overflow = "hidden"; // prevent scroll
+        document.body.classList.add("menu-open"); // add class for styling
       } else {
         tl.reverse();
+        document.body.style.overflow = ""; // restore scroll
+        document.body.classList.remove("menu-open");
       }
     });
   }
 }
 
 initMobileMenu();
+
+
+function initMorphingPlayPauseToggle() {  
+
+  const playPath = "M3.75 9L20.25 9 M3.75 15L20.25 15";
+  const pausePath = "M6.16406 6.16565L17.8313 17.8329 M6.16797 17.8344L17.8352 6.16712";
+
+  const buttonToggle = document.querySelector('[data-play-pause="toggle"]');
+  const iconPath = buttonToggle.querySelector('[data-play-pause="path"]');
+  let isPlaying = false; // keep track of state to control the morph
+
+  buttonToggle.addEventListener("click", () => {
+    gsap.to(iconPath, {
+      duration: 0.5,
+      morphSVG: {
+        type: "rotational",
+        map: "complexity", // morphs the shape based on the amount of anchor points, it's fastest!
+        shape: isPlaying ? playPath : pausePath, // if button is 'playing', morph to pause and vice versa
+      },
+      ease: "expo.out",
+    });
+    isPlaying = !isPlaying; // control play/pause state again
+  });
+}
+
+initMorphingPlayPauseToggle();
+
+
 
 /* Basic GSAP Slider */
 function initBasicGSAPSlider() {
