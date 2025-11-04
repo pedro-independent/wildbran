@@ -677,12 +677,13 @@ function initMobileMenu() {
     const navMobile = document.querySelector(".nav-mobile");
     const navLogo = document.querySelector(".wildbran-logo");
 
-    if (!menuBtn || !menuBg || !navMobile || !navLogo) return; // safety check
+    if (!menuBtn || !menuBg || !navMobile || !navLogo) return;
 
-    // Ensure initial states
+    // Initial states
     gsap.set(menuBg, { height: "0%" });
+    gsap.set(navMobile, { opacity: 0, display: "none" });
 
-    // Create timeline (paused initially)
+    // Timeline
     const tl = gsap.timeline({ paused: true, reversed: true });
 
     tl.to(menuBg, {
@@ -690,24 +691,21 @@ function initMobileMenu() {
       height: "100vh",
       duration: 0.5,
       ease: "power2.inOut",
-    }).to(
-      navMobile,
-      {
-        display: "flex",
-        duration: 0,
-      },
-      "-=0.3"
-    ); // overlap slightly
+    })
+      .set(navMobile, { display: "flex" }, "-=0.3") // make it appear in layout
+      .to(navMobile, { opacity: 1, duration: 0.1 }, "<"); // fade it in
 
-    // Toggle timeline on button click
+    // Toggle logic
     menuBtn.addEventListener("click", () => {
       if (tl.reversed()) {
         tl.play();
-        document.body.style.overflow = "hidden"; // prevent scroll
-        document.body.classList.add("menu-open"); // add class for styling
+        document.body.style.overflow = "hidden";
+        document.body.classList.add("menu-open");
       } else {
+        // fade out nav before collapsing bg
+        gsap.to(navMobile, { opacity: 0, duration: 0.2, ease: "expo.out" });
         tl.reverse();
-        document.body.style.overflow = ""; // restore scroll
+        document.body.style.overflow = "";
         document.body.classList.remove("menu-open");
       }
     });
@@ -715,6 +713,7 @@ function initMobileMenu() {
 }
 
 initMobileMenu();
+
 
 
 function initMorphingPlayPauseToggle() {  
@@ -1071,8 +1070,6 @@ if (page === "products") {
   };
 
   initHorizontal();
-
-
 
 /* Filter Products */
 function initFilterBasic() {
