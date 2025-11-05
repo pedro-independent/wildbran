@@ -1072,6 +1072,7 @@ if (page === "products") {
   initHorizontal();
 
 /* Filter Products */
+/* Filter Products */
 function initFilterBasic() {
   const groups = document.querySelectorAll("[data-filter-group]");
 
@@ -1117,6 +1118,7 @@ function initFilterBasic() {
   });
 }
 
+/* Product–Modal Sync (fixed version) */
 function initProductSync() {
   const productSelectors = document.querySelectorAll(".products-select-item");
   const modal = document.querySelector('[data-modal-name="product-info"]');
@@ -1125,16 +1127,18 @@ function initProductSync() {
   productSelectors.forEach((selector) => {
     selector.addEventListener("click", function () {
       const productName = this.getAttribute("data-filter-target");
-      if (!productName) return;
+      const categoryId = this.closest(".products-item")?.getAttribute("data-category-id");
+      if (!productName || !categoryId) return;
 
-      modal.querySelectorAll(".w-dyn-item").forEach((item) => {
-        item.setAttribute("data-filter-status", "not-active");
-      });
+      // Reset only products of this same category
+      modal
+        .querySelectorAll(`.w-dyn-item[data-category-id="${categoryId}"]`)
+        .forEach((item) => item.setAttribute("data-filter-status", "not-active"));
 
+      // Activate the clicked product within its category
       const targetModalItem = modal.querySelector(
-        `.w-dyn-item[data-product-name="${productName}"]`
+        `.w-dyn-item[data-category-id="${categoryId}"][data-product-name="${productName}"]`
       );
-
       if (targetModalItem) {
         targetModalItem.setAttribute("data-filter-status", "active");
       }
@@ -1142,12 +1146,14 @@ function initProductSync() {
   });
 }
 
+/* Modal Logic */
 function initModalBasic() {
   const modalGroup = document.querySelector("[data-modal-group-status]");
   const modals = document.querySelectorAll("[data-modal-name]");
   const modalTargets = document.querySelectorAll("[data-modal-target]");
   const productInfoModal = document.querySelector('[data-modal-name="product-info"]');
 
+  /* Tabs inside Product Info Modal */
   function initModalTabs() {
     if (!productInfoModal) return;
     const modalTabs = productInfoModal.querySelectorAll(".modal-tabs-item");
@@ -1165,14 +1171,13 @@ function initModalBasic() {
 
         visibleProduct.querySelectorAll(".modal-cms").forEach((cms) => cms.classList.remove("active"));
 
-        const targetCMS = visibleProduct.querySelector(
-          `.modal-cms[data-info-type="${targetType}"]`
-        );
+        const targetCMS = visibleProduct.querySelector(`.modal-cms[data-info-type="${targetType}"]`);
         if (targetCMS) targetCMS.classList.add("active");
       });
     });
   }
 
+  /* Update product modal content */
   function updateProductInfoModal(clickedBtn) {
     if (!productInfoModal || !clickedBtn) return;
 
@@ -1207,9 +1212,22 @@ function initModalBasic() {
         const tabType = tab.getAttribute("data-info-target");
         tab.classList.toggle("active", tabType === targetType);
       });
+    } else {
+      // No product was selected for this category -> select first product by default
+      const fallbackProduct = productInfoModal.querySelector(
+        `.w-dyn-item[data-category-id="${clickedCategoryId}"]`
+      );
+      if (fallbackProduct) {
+        fallbackProduct.classList.add("product-visible");
+        const targetInfoSection = fallbackProduct.querySelector(
+          `.modal-cms[data-info-type="${targetType}"]`
+        );
+        if (targetInfoSection) targetInfoSection.classList.add("active");
+      }
     }
   }
 
+  /* Modal openers */
   modalTargets.forEach((modalTarget) => {
     modalTarget.addEventListener("click", function () {
       const modalTargetName = this.getAttribute("data-modal-target");
@@ -1233,6 +1251,7 @@ function initModalBasic() {
     });
   });
 
+  /* Modal closers */
   function closeAllModals() {
     modalTargets.forEach((target) =>
       target.setAttribute("data-modal-status", "not-active")
@@ -1257,7 +1276,8 @@ function initModalBasic() {
   }
 
   document.querySelectorAll("[data-modal-close]").forEach((closeBtn) =>
-    closeBtn.addEventListener("click", closeAllModals));
+    closeBtn.addEventListener("click", closeAllModals)
+  );
 
   document.addEventListener("keydown", function (event) {
     if (event.key === "Escape") closeAllModals();
@@ -1266,9 +1286,11 @@ function initModalBasic() {
   initModalTabs();
 }
 
+/* Initialize all systems */
 initFilterBasic();
 initProductSync();
 initModalBasic();
+
 
 
 
