@@ -161,33 +161,33 @@ function playPageLeave(destination) {
 }
 
 // --- LINK HANDLING ---
-const validLinks = Array.from(document.querySelectorAll("a")).filter(link => {
-  const href = link.getAttribute("href") || "";
-  const hostname = new URL(link.href, window.location.origin).hostname;
+// const validLinks = Array.from(document.querySelectorAll("a")).filter(link => {
+//   const href = link.getAttribute("href") || "";
+//   const hostname = new URL(link.href, window.location.origin).hostname;
 
-  return (
-    hostname === window.location.hostname &&
-    !href.startsWith("#") &&
-    link.getAttribute("target") !== "_blank" &&
-    !link.hasAttribute("data-transition-prevent")
-  );
-});
+//   return (
+//     hostname === window.location.hostname &&
+//     !href.startsWith("#") &&
+//     link.getAttribute("target") !== "_blank" &&
+//     !link.hasAttribute("data-transition-prevent")
+//   );
+// });
 
-validLinks.forEach(link => {
-  link.addEventListener("click", event => {
-    event.preventDefault();
-    const destination = link.href;
-    playPageLeave(destination);
-  });
-});
+// validLinks.forEach(link => {
+//   link.addEventListener("click", event => {
+//     event.preventDefault();
+//     const destination = link.href;
+//     playPageLeave(destination);
+//   });
+// });
 
-// Handle back-forward cache
-window.addEventListener("pageshow", event => {
-  if (event.persisted) window.location.reload();
-});
+// // Handle back-forward cache
+// window.addEventListener("pageshow", event => {
+//   if (event.persisted) window.location.reload();
+// });
 
-// Play entrance animation when landing
-playPageEnter();
+// // Play entrance animation when landing
+// playPageEnter();
 
 
 /* Global Text Reveals */
