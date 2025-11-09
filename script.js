@@ -105,89 +105,89 @@ initRevealLoader();
 
 
 /* Page Transition */
-// const transition = document.querySelector(".transition");
-// const shapes = document.querySelectorAll(".transition-shape");
+const transition = document.querySelector(".transition");
+const shapes = document.querySelectorAll(".transition-shape");
 
-// // Initial state: shapes cover the page
-// gsap.set(transition, { display: "block" });
-// gsap.set(shapes, { scale: 3 });
+// Initial state: shapes cover the page
+gsap.set(transition, { display: "block" });
+gsap.set(shapes, { scale: 3 });
 
-// // --- PAGE ENTER (reveal content) ---
-// function playPageEnter() {
-//   const tl = gsap.timeline({
-//     defaults: { ease: "expo.out" },
-//     onComplete: () => gsap.set(transition, { display: "none" })
-//   });
+// --- PAGE ENTER (reveal content) ---
+function playPageEnter() {
+  const tl = gsap.timeline({
+    defaults: { ease: "expo.out" },
+    onComplete: () => gsap.set(transition, { display: "none" })
+  });
 
-//   // Directly scale shapes from 3 to 0
-//   tl.to(shapes, {
-//     scale: 0,
-//     duration: 0.8, // slightly longer for smoother feel
-//     ease: "expo.out",
-//     stagger: { amount: 0.6, from: "random" },
-//   });
-// }
+  // Directly scale shapes from 3 to 0
+  tl.to(shapes, {
+    scale: 0,
+    duration: 0.8, // slightly longer for smoother feel
+    ease: "expo.out",
+    stagger: { amount: 0.6, from: "random" },
+  });
+}
 
-// // --- PAGE LEAVE (cover content) ---
-// function playPageLeave(destination) {
-//   const tl = gsap.timeline({
-//     defaults: { ease: "expo.out" },
-//     onStart: () => gsap.set(transition, { display: "block" }),
-//     onComplete: () => {
-//       requestAnimationFrame(() => {
-//         window.location.href = destination;
-//       });
-//     },
-//   });
+// --- PAGE LEAVE (cover content) ---
+function playPageLeave(destination) {
+  const tl = gsap.timeline({
+    defaults: { ease: "expo.out" },
+    onStart: () => gsap.set(transition, { display: "block" }),
+    onComplete: () => {
+      requestAnimationFrame(() => {
+        window.location.href = destination;
+      });
+    },
+  });
 
-//   // Step 1: shapes scale in to normal size
-//   tl.fromTo(
-//     shapes,
-//     { scale: 0 },
-//     {
-//       scale: 1,
-//       duration: 0.5,
-//       stagger: { amount: 0.5, from: "random" },
-//     }
-//   );
+  // Step 1: shapes scale in to normal size
+  tl.fromTo(
+    shapes,
+    { scale: 0 },
+    {
+      scale: 1,
+      duration: 0.5,
+      stagger: { amount: 0.5, from: "random" },
+    }
+  );
 
-//   // Step 2: once visible, scale them up to fill screen
-//   tl.to(shapes, {
-//     scale: 3,
-//     duration: 0.5,
-//     ease: "expo.out",
-//     stagger: { amount: 0.5, from: "random" },
-//   }, ">");
-// }
+  // Step 2: once visible, scale them up to fill screen
+  tl.to(shapes, {
+    scale: 3,
+    duration: 0.5,
+    ease: "expo.out",
+    stagger: { amount: 0.5, from: "random" },
+  }, ">");
+}
 
-// // --- LINK HANDLING ---
-// const validLinks = Array.from(document.querySelectorAll("a")).filter(link => {
-//   const href = link.getAttribute("href") || "";
-//   const hostname = new URL(link.href, window.location.origin).hostname;
+// --- LINK HANDLING ---
+const validLinks = Array.from(document.querySelectorAll("a")).filter(link => {
+  const href = link.getAttribute("href") || "";
+  const hostname = new URL(link.href, window.location.origin).hostname;
 
-//   return (
-//     hostname === window.location.hostname &&
-//     !href.startsWith("#") &&
-//     link.getAttribute("target") !== "_blank" &&
-//     !link.hasAttribute("data-transition-prevent")
-//   );
-// });
+  return (
+    hostname === window.location.hostname &&
+    !href.startsWith("#") &&
+    link.getAttribute("target") !== "_blank" &&
+    !link.hasAttribute("data-transition-prevent")
+  );
+});
 
-// validLinks.forEach(link => {
-//   link.addEventListener("click", event => {
-//     event.preventDefault();
-//     const destination = link.href;
-//     playPageLeave(destination);
-//   });
-// });
+validLinks.forEach(link => {
+  link.addEventListener("click", event => {
+    event.preventDefault();
+    const destination = link.href;
+    playPageLeave(destination);
+  });
+});
 
-// // Handle back-forward cache
-// window.addEventListener("pageshow", event => {
-//   if (event.persisted) window.location.reload();
-// });
+// Handle back-forward cache
+window.addEventListener("pageshow", event => {
+  if (event.persisted) window.location.reload();
+});
 
-// // Play entrance animation when landing
-// playPageEnter();
+// Play entrance animation when landing
+playPageEnter();
 
 
 /* Global Text Reveals */
