@@ -1072,7 +1072,6 @@ if (page === "products") {
   initHorizontal();
 
 /* Filter Products */
-/* Filter Products */
 function initFilterBasic() {
   const groups = document.querySelectorAll("[data-filter-group]");
 
