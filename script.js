@@ -992,7 +992,7 @@ if (page === "home") {
 
 /* OUR PRODUCTS */
 if (page === "products") {
-if (window.matchMedia("(min-width: 991px)").matches) {
+
   // Sorts .products-select-item elements by their data-sort attribute (ascending)
   function sortProductsByOrder() {
     /* Sort products by order */
@@ -1071,7 +1071,11 @@ if (window.matchMedia("(min-width: 991px)").matches) {
 
   initHorizontal();
 
+  
 /* Filter Products */
+function initDesktop(scope) {
+  if (!scope) return;
+
 function initFilterBasic() {
   const groups = document.querySelectorAll("[data-filter-group]");
 
@@ -1285,313 +1289,27 @@ function initModalBasic() {
   initModalTabs();
 }
 
-/* Initialize all systems */
-initFilterBasic();
-initProductSync();
-initModalBasic();
-
-}
-
-/* OUR PRODUCTS - Tablet */
-if (window.matchMedia("(max-width: 991px)").matches) {
-  // Sorts .products-select-item elements by their data-sort attribute (ascending)
-  function sortProductsByOrder() {
-    /* Sort products by order */
-    const wrapper = document.querySelector(".products-select");
-    if (!wrapper) return;
-
-    const items = Array.from(wrapper.querySelectorAll(".products-select-item"));
-
-    items.sort((a, b) => {
-      const aValue = parseFloat(a.getAttribute("data-sort")) || 0;
-      const bValue = parseFloat(b.getAttribute("data-sort")) || 0;
-      return aValue - bValue; // ascending
-    });
-
-    items.forEach(item => wrapper.appendChild(item));
-  }
-  sortProductsByOrder();
-
-
-  /* Horizontal Scroll Section */
-  const initHorizontal = () => {
-    const mm = gsap.matchMedia();
-
-    mm.add("(min-width: 992px)", () => {
-      const horizontal = document.querySelector(".section_products");
-      const horizontalContent = horizontal.querySelector(".products-list-wrap");
-
-      if (horizontal && horizontalContent) {
-        // main horizontal scroll timeline
-        const tl = gsap
-          .timeline({
-            defaults: { ease: "none" },
-            scrollTrigger: {
-              trigger: horizontal,
-              start: "top top",
-              end: () =>
-                "+=" + (horizontalContent.scrollWidth - window.innerWidth),
-              pin: true,
-              scrub: 1,
-              invalidateOnRefresh: true,
-            },
-          })
-          .to(horizontalContent, {
-            x: () => -(horizontalContent.scrollWidth - window.innerWidth),
-            ease: "none",
-          });
-
-        // --- PARALLAX ITEMS ---
-        document.querySelectorAll("[data-parallax-step]").forEach((el) => {
-          const distance = el.dataset.distance || -50; // move in % (positive or negative)
-          const startPercent = el.dataset.start || 25; // optional: where it begins
-          const endPercent = el.dataset.end || distance; // optional: custom end
-          gsap.fromTo(
-            el,
-            { xPercent: startPercent },
-            {
-              xPercent: endPercent,
-              ease: "none",
-              scrollTrigger: {
-                containerAnimation: tl, // ties to horizontal scroll
-                trigger: el,
-                start: "center 99%", // adjust as needed
-                end: "center left",
-                scrub: true,
-              },
-            }
-          );
-        });
-      }
-    });
-
-    mm.add("(max-width: 991px)", () => {
-      ScrollTrigger.getAll().forEach((st) => st.kill());
-    });
-  };
-
-  initHorizontal();
-
-/* Filter Products */
-function initFilterBasic() {
-  const groups = document.querySelectorAll("[data-filter-group]");
-
-  groups.forEach((group) => {
-    const buttons = group.querySelectorAll("[data-filter-target]");
-    const items = group.querySelectorAll("[data-filter-name]");
-    const transitionDelay = 600;
-
-    const updateStatus = (element, shouldBeActive) => {
-      element.setAttribute("data-filter-status", shouldBeActive ? "active" : "not-active");
-      element.setAttribute("aria-hidden", !shouldBeActive);
-    };
-
-    const handleFilter = (target) => {
-      const itemsToFilter = group.querySelectorAll(".products-select-item");
-
-      itemsToFilter.forEach((item) => {
-        const shouldBeActive = target === "all" || item.getAttribute("data-filter-target") === target;
-        const currentStatus = item.getAttribute("data-filter-status");
-
-        if (currentStatus === "active") {
-          item.setAttribute("data-filter-status", "transition-out");
-          setTimeout(() => updateStatus(item, shouldBeActive), transitionDelay);
-        } else {
-          setTimeout(() => updateStatus(item, shouldBeActive), transitionDelay);
-        }
-      });
-
-      buttons.forEach((button) => {
-        const isActive = button.getAttribute("data-filter-target") === target;
-        button.setAttribute("data-filter-status", isActive ? "active" : "not-active");
-        button.setAttribute("aria-pressed", isActive);
-      });
-    };
-
-    buttons.forEach((button) => {
-      button.addEventListener("click", () => {
-        const target = button.getAttribute("data-filter-target");
-        if (button.getAttribute("data-filter-status") === "active") return;
-        handleFilter(target);
-      });
-    });
-  });
-}
-
-/* Product–Modal Sync (fixed version) */
-function initProductSync() {
-  const productSelectors = document.querySelectorAll(".products-select-item");
-  const modal = document.querySelector('[data-modal-name="product-info"]');
-  if (!modal || !productSelectors.length) return;
-
-  productSelectors.forEach((selector) => {
-    selector.addEventListener("click", function () {
-      const productName = this.getAttribute("data-filter-target");
-      const categoryId = this.closest(".products-item")?.getAttribute("data-category-id");
-      if (!productName || !categoryId) return;
-
-      // Reset only products of this same category
-      modal
-        .querySelectorAll(`.w-dyn-item[data-category-id="${categoryId}"]`)
-        .forEach((item) => item.setAttribute("data-filter-status", "not-active"));
-
-      // Activate the clicked product within its category
-      const targetModalItem = modal.querySelector(
-        `.w-dyn-item[data-category-id="${categoryId}"][data-product-name="${productName}"]`
-      );
-      if (targetModalItem) {
-        targetModalItem.setAttribute("data-filter-status", "active");
-      }
-    });
-  });
-}
-
-/* Modal Logic */
-function initModalBasic() {
-  const modalGroup = document.querySelector("[data-modal-group-status]");
-  const modals = document.querySelectorAll("[data-modal-name]");
-  const modalTargets = document.querySelectorAll("[data-modal-target]");
-  const productInfoModal = document.querySelector('[data-modal-name="product-info"]');
-
-  /* Tabs inside Product Info Modal */
-  function initModalTabs() {
-    if (!productInfoModal) return;
-    const modalTabs = productInfoModal.querySelectorAll(".modal-tabs-item");
-
-    modalTabs.forEach((tab) => {
-      tab.addEventListener("click", function () {
-        const targetType = this.getAttribute("data-info-target");
-        if (!targetType) return;
-
-        modalTabs.forEach((t) => t.classList.remove("active"));
-        this.classList.add("active");
-
-        const visibleProduct = productInfoModal.querySelector(".w-dyn-item.product-visible");
-        if (!visibleProduct) return;
-
-        visibleProduct.querySelectorAll(".modal-cms").forEach((cms) => cms.classList.remove("active"));
-
-        const targetCMS = visibleProduct.querySelector(`.modal-cms[data-info-type="${targetType}"]`);
-        if (targetCMS) targetCMS.classList.add("active");
-      });
-    });
-  }
-
-  /* Update product modal content */
-  function updateProductInfoModal(clickedBtn) {
-    if (!productInfoModal || !clickedBtn) return;
-
-    const productWrapper = clickedBtn.closest(".products-item");
-    const targetType = clickedBtn.getAttribute("data-info-target");
-    if (!productWrapper || !targetType) return;
-
-    const clickedCategoryId = productWrapper.getAttribute("data-category-id");
-    if (!clickedCategoryId) return;
-
-    productInfoModal.querySelectorAll(".w-dyn-item").forEach((item) =>
-      item.classList.remove("product-visible")
-    );
-    productInfoModal.querySelectorAll(".modal-cms").forEach((info) =>
-      info.classList.remove("active")
-    );
-
-    const targetProduct = productInfoModal.querySelector(
-      `.w-dyn-item[data-category-id="${clickedCategoryId}"][data-filter-status="active"]`
-    );
-
-    if (targetProduct) {
-      targetProduct.classList.add("product-visible");
-
-      const targetInfoSection = targetProduct.querySelector(
-        `.modal-cms[data-info-type="${targetType}"]`
-      );
-      if (targetInfoSection) targetInfoSection.classList.add("active");
-
-      const modalTabs = productInfoModal.querySelectorAll(".modal-tabs-item");
-      modalTabs.forEach((tab) => {
-        const tabType = tab.getAttribute("data-info-target");
-        tab.classList.toggle("active", tabType === targetType);
-      });
-    } else {
-      // No product was selected for this category -> select first product by default
-      const fallbackProduct = productInfoModal.querySelector(
-        `.w-dyn-item[data-category-id="${clickedCategoryId}"]`
-      );
-      if (fallbackProduct) {
-        fallbackProduct.classList.add("product-visible");
-        const targetInfoSection = fallbackProduct.querySelector(
-          `.modal-cms[data-info-type="${targetType}"]`
-        );
-        if (targetInfoSection) targetInfoSection.classList.add("active");
-      }
-    }
-  }
-
-  /* Modal openers */
-  modalTargets.forEach((modalTarget) => {
-    modalTarget.addEventListener("click", function () {
-      const modalTargetName = this.getAttribute("data-modal-target");
-
-      modalTargets.forEach((target) =>
-        target.setAttribute("data-modal-status", "not-active")
-      );
-      modals.forEach((modal) =>
-        modal.setAttribute("data-modal-status", "not-active")
-      );
-
-      document
-        .querySelector(`[data-modal-target="${modalTargetName}"]`)
-        ?.setAttribute("data-modal-status", "active");
-      document
-        .querySelector(`[data-modal-name="${modalTargetName}"]`)
-        ?.setAttribute("data-modal-status", "active");
-
-      if (modalGroup) modalGroup.setAttribute("data-modal-group-status", "active");
-      if (modalTargetName === "product-info") updateProductInfoModal(this);
-    });
-  });
-
-  /* Modal closers */
-  function closeAllModals() {
-    modalTargets.forEach((target) =>
-      target.setAttribute("data-modal-status", "not-active")
-    );
-    modals.forEach((modal) =>
-      modal.setAttribute("data-modal-status", "not-active")
-    );
-
-    if (modalGroup) modalGroup.setAttribute("data-modal-group-status", "not-active");
-
-    if (productInfoModal) {
-      productInfoModal.querySelectorAll(".w-dyn-item").forEach((item) =>
-        item.classList.remove("product-visible")
-      );
-      productInfoModal.querySelectorAll(".modal-cms").forEach((info) =>
-        info.classList.remove("active")
-      );
-      productInfoModal.querySelectorAll(".modal-tabs-item").forEach((tab) =>
-        tab.classList.remove("active")
-      );
-    }
-  }
-
-  document.querySelectorAll("[data-modal-close]").forEach((closeBtn) =>
-    closeBtn.addEventListener("click", closeAllModals)
-  );
-
-  document.addEventListener("keydown", function (event) {
-    if (event.key === "Escape") closeAllModals();
-  });
-
-  initModalTabs();
 }
 
 /* Initialize all systems */
-initFilterBasic();
-initProductSync();
-initModalBasic();
+// initFilterBasic();
+// initProductSync();
+// initModalBasic();
 
-}
+
+
+  // Find the Desktop Wrapper
+  const desktopScope = document.getElementById('desktop-wrapper');
+  if (desktopScope) {
+    initDesktop(desktopScope);
+  }
+
+  // Find the Mobile Wrapper
+  const mobileScope = document.getElementById('mobile-wrapper');
+  if (mobileScope) {
+    initMobile(mobileScope);
+  }
+
 
 }
 
