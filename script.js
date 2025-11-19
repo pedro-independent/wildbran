@@ -1073,9 +1073,6 @@ if (page === "products") {
 
   
 /* Filter Products */
-function initDesktop(scope) {
-  if (!scope) return;
-
 function initFilterBasic() {
   const groups = document.querySelectorAll("[data-filter-group]");
 
@@ -1289,26 +1286,12 @@ function initModalBasic() {
   initModalTabs();
 }
 
-}
-
 /* Initialize all systems */
-// initFilterBasic();
-// initProductSync();
-// initModalBasic();
+initFilterBasic();
+initProductSync();
+initModalBasic();
 
 
-
-  // Find the Desktop Wrapper
-  const desktopScope = document.getElementById('desktop-wrapper');
-  if (desktopScope) {
-    initDesktop(desktopScope);
-  }
-
-  // Find the Mobile Wrapper
-  const mobileScope = document.getElementById('mobile-wrapper');
-  if (mobileScope) {
-    initMobile(mobileScope);
-  }
 
 
 }
