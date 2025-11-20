@@ -993,25 +993,6 @@ if (page === "home") {
 /* OUR PRODUCTS */
 if (page === "products") {
 
-  // Sorts .products-select-item elements by their data-sort attribute (ascending)
-  function sortProductsByOrder() {
-    /* Sort products by order */
-    const wrapper = document.querySelector(".products-select");
-    if (!wrapper) return;
-
-    const items = Array.from(wrapper.querySelectorAll(".products-select-item"));
-
-    items.sort((a, b) => {
-      const aValue = parseFloat(a.getAttribute("data-sort")) || 0;
-      const bValue = parseFloat(b.getAttribute("data-sort")) || 0;
-      return aValue - bValue; // ascending
-    });
-
-    items.forEach(item => wrapper.appendChild(item));
-  }
-  sortProductsByOrder();
-
-
   /* Horizontal Scroll Section */
   const initHorizontal = () => {
     const mm = gsap.matchMedia();
@@ -1075,6 +1056,24 @@ if (page === "products") {
 /* Filter Products */
 if (window.matchMedia("(min-width: 992px)").matches) {
     console.log("Desktop View");
+
+      // Sorts .products-select-item elements by their data-sort attribute (ascending)
+  function sortProductsByOrder() {
+    /* Sort products by order */
+    const wrapper = document.querySelector(".products-select");
+    if (!wrapper) return;
+
+    const items = Array.from(wrapper.querySelectorAll(".products-select-item"));
+
+    items.sort((a, b) => {
+      const aValue = parseFloat(a.getAttribute("data-sort")) || 0;
+      const bValue = parseFloat(b.getAttribute("data-sort")) || 0;
+      return aValue - bValue; // ascending
+    });
+
+    items.forEach(item => wrapper.appendChild(item));
+  }
+  sortProductsByOrder();
 
 function initFilterBasic() {
   const groups = document.querySelectorAll("[data-filter-group]");
@@ -1301,6 +1300,24 @@ initModalBasic();
 
 if (window.matchMedia("(max-width: 991px)").matches) {
     console.log("Mobile ViewPort");
+
+
+  function sortProductsByOrder() {
+    /* Sort products by order */
+    const wrapper = document.querySelector(".products-select");
+    if (!wrapper) return;
+
+    const items = Array.from(wrapper.querySelectorAll(".products-select-item"));
+
+    items.sort((a, b) => {
+      const aValue = parseFloat(a.getAttribute("data-sort")) || 0;
+      const bValue = parseFloat(b.getAttribute("data-sort")) || 0;
+      return aValue - bValue; // ascending
+    });
+
+    items.forEach(item => wrapper.appendChild(item));
+  }
+  sortProductsByOrder();
 
     function initFilterBasic() {
   const groups = document.querySelectorAll("[data-filter-group]");
