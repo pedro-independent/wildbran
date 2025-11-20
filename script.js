@@ -1316,7 +1316,7 @@ if (window.matchMedia("(max-width: 991px)").matches) {
     };
 
     const handleFilter = (target) => {
-      const itemsToFilter = group.querySelectorAll(".products-select-item");
+      const itemsToFilter = group.querySelectorAll("[data-select-item]");
 
       itemsToFilter.forEach((item) => {
         const shouldBeActive = target === "all" || item.getAttribute("data-filter-target") === target;
@@ -1348,7 +1348,7 @@ if (window.matchMedia("(max-width: 991px)").matches) {
 }
 
 function initProductSync() {
-  const productSelectors = document.querySelectorAll(".products-select-item");
+  const productSelectors = document.querySelectorAll("[data-select-item]");
   const modal = document.querySelector('[data-modal-name="product-info"]');
   if (!modal || !productSelectors.length) return;
 
