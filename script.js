@@ -104,35 +104,47 @@ function initRevealLoader() {
 initRevealLoader();
 
 
+
 /* Page Transition */
 const transition = document.querySelector(".transition");
 const shapes = document.querySelectorAll(".transition-shape");
+const bg = document.querySelector(".transition-bg");
 
-// Initial state: shapes cover the page
-gsap.set(transition, { display: "block" });
+// 1. INITIAL SETUP
+// Shapes cover the screen.
 gsap.set(shapes, { scale: 3 });
+// The background fill is ON (opacity 1) to ensure no gaps are seen on load.
+gsap.set(bg, { opacity: 1 });
+gsap.set(transition, { display: "block" });
 
-// --- PAGE ENTER (reveal content) ---
 function playPageEnter() {
   const tl = gsap.timeline({
     defaults: { ease: "expo.out" },
-    onComplete: () => gsap.set(transition, { display: "none" })
+    onComplete: () => {
+      gsap.set(transition, { display: "none" });
+    }
   });
 
-  // Directly scale shapes from 3 to 0
-  tl.to(shapes, {
-    scale: 0,
-    duration: 0.8, // slightly longer for smoother feel
-    ease: "expo.out",
-    stagger: { amount: 0.6, from: "random" },
-  });
+  // 2. ENTER ANIMATION
+  // Instant switch: Hide the solid BG, leaving only the shapes (which are scale 3).
+  // Then immediately shrink the shapes to reveal the page.
+  tl.set(bg, { opacity: 0 }) 
+    .to(shapes, {
+      scale: 0,
+      duration: 0.8,
+      ease: "expo.out",
+      stagger: { amount: 0.6, from: "random" },
+    });
 }
 
-// --- PAGE LEAVE (cover content) ---
 function playPageLeave(destination) {
   const tl = gsap.timeline({
     defaults: { ease: "expo.out" },
-    onStart: () => gsap.set(transition, { display: "block" }),
+    onStart: () => {
+      gsap.set(transition, { display: "block" });
+      // Ensure BG is hidden so we can see the shapes growing
+      gsap.set(bg, { opacity: 0 }); 
+    },
     onComplete: () => {
       requestAnimationFrame(() => {
         window.location.href = destination;
@@ -140,7 +152,8 @@ function playPageLeave(destination) {
     },
   });
 
-  // Step 1: shapes scale in to normal size
+  // 3. LEAVE ANIMATION
+  // First, grow the shapes.
   tl.fromTo(
     shapes,
     { scale: 0 },
@@ -151,13 +164,17 @@ function playPageLeave(destination) {
     }
   );
 
-  // Step 2: once visible, scale them up to fill screen
   tl.to(shapes, {
     scale: 3,
     duration: 0.5,
     ease: "expo.out",
     stagger: { amount: 0.5, from: "random" },
   }, ">");
+
+  // 4. THE FIX: Fade in the solid BG at the very end.
+  // This plugs the tiny gaps between shapes just before the page unloads.
+  // We use a very short duration (0.1s) and overlap it ("-=0.2") with the shape expansion.
+  tl.to(bg, { opacity: 1, duration: 0.1 }, "-=0.2");
 }
 
 // --- LINK HANDLING ---
@@ -188,7 +205,6 @@ window.addEventListener("pageshow", event => {
 
 // Play entrance animation when landing
 playPageEnter();
-
 
 /* Global Text Reveals */
 const splitConfig = {
