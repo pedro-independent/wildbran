@@ -1970,3 +1970,67 @@ initSwiperSlider();
 initFilterBasic();
 
 }
+
+/* STORE LOCATOR */
+if (page === "store") {
+  function initLiveSearch() {
+  
+    document.querySelectorAll('[data-live-search]').forEach(function(root) {
+      const input = root.querySelector('[data-live-search-input]');
+      const notFound = root.querySelector('[data-live-search-not-found]');
+  
+      // Options: Full Documentation: https://listjs.com/
+      const options = {
+        listClass: 'live-search__list',
+        valueNames: ['live-search__name', 'live-search__keywords'],
+        fuzzySearch: {
+          location: 0,
+          distance: 100,
+          threshold: 0.3
+        }
+      };
+  
+      const list = new List(root, options);
+  
+      function updateNotFound() {
+        if (!notFound) return;
+        const q = (input && input.value ? input.value : '').trim();
+        if (list.matchingItems.length === 0 && q !== '') {
+          notFound.style.display = 'block';
+          const p = notFound.querySelector('p');
+          if (p) p.textContent = `We couldn't find a match for "${q}" 😕`;
+        } else {
+          notFound.style.display = 'none';
+        }
+      }
+  
+      function runSearch() {
+        const q = (input && input.value ? input.value : '').trim();
+        if (!q) {
+          list.search(); // Clear
+          updateNotFound();
+          return;
+        }
+        if (typeof list.fuzzySearch === 'function') {
+          list.fuzzySearch(q);
+        } else {
+          list.search(q, ['live-search__name', 'live-search__keywords']);
+        }
+        updateNotFound();
+      }
+  
+      if (input) {
+        input.addEventListener('input', runSearch);
+      }
+  
+      root._pageSearchList = list;
+  
+      // Initial state
+      list.search();
+      updateNotFound();
+      
+    });
+  }
+  
+initLiveSearch();
+}
